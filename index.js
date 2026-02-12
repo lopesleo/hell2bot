@@ -165,6 +165,13 @@ function setupMessageHandler(sock) {
             break;
           }
 
+          case '/armors': {
+            const armorArgs = text.split(/\s+/).slice(1);
+            const armorText = await strategems.buildArmors(armorArgs, logger);
+            await sock.sendMessage(GROUP_JID, { text: armorText });
+            break;
+          }
+
           case '/pollnow': {
             await sock.sendMessage(GROUP_JID, { text: '🔄 Executando poll...' });
             await runPoll();

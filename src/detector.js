@@ -629,6 +629,7 @@ export function buildHelp() {
     '⏱️ /eta — Estimativa de conclusão das orders',
     '🎯 /meta [bugs|bots|illu] [7-10] — Top 10 stratagems da semana',
     '🔫 /armas [bugs|bots|illu] [7-10] — Top 10 armas da semana',
+    '🛡️ /armors [bugs|bots|illu] [7-10] — Top 10 armaduras da semana',
     '📈 /tendencia — Stratagems em alta e em queda',
     '🔄 /pollnow — Forçar verificação imediata',
     '📜 /listgroups — Listar grupos (admin)',

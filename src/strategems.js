@@ -13,6 +13,15 @@ export async function getStrategemStats(difficulty = 0, mission = 'All') {
   return data;
 }
 
+export async function getArmorStats(difficulty = 0, mission = 'All') {
+  const key = `armor_${difficulty}_${mission}`;
+  const cached = cache.get(key);
+  if (cached) return cached;
+  const data = await fetchJSON(`${API_BASE}/history_armor?difficulty=${difficulty}&mission=${mission}`);
+  cache.set(key, data);
+  return data;
+}
+
 export async function getWeaponStats(difficulty = 0, mission = 'All') {
   const key = `weapon_${difficulty}_${mission}`;
   const cached = cache.get(key);
@@ -229,6 +238,31 @@ const WEAPON_NAMES = {
   dynamite:           '💣 Dinamite',
   urchin:             '💣 Urchin',
   pineapple:          '💣 Pineapple',
+};
+
+// ── Armor name mapping ───────────────────────────────
+const ARMOR_NAMES = {
+  'SERVO-ASSISTED':           '🦾 Servo-Assisted',
+  'FORTIFIED':                '🏰 Fortified',
+  'EXTRA PADDING':            '🛡️ Extra Padding',
+  'MED-KIT':                  '💊 Med-Kit',
+  'ENGINEERING KIT':          '🔧 Engineering Kit',
+  'INFLAMMABLE':              '🔥 Inflammable',
+  'ADVANCED FILTRATION':      '🫁 Advanced Filtration',
+  'SIEGE-READY':              '🏰 Siege-Ready',
+  'GUNSLINGER':               '🤠 Gunslinger',
+  'DEMOCRACY PROTECTS':       '🗽 Democracy Protects',
+  'SCOUT':                    '👁️ Scout',
+  'ELECTRICAL CONDUIT':       '⚡ Electrical Conduit',
+  'UNFLINCHING':              '💪 Unflinching',
+  'ACCLIMATED':               '🌡️ Acclimated',
+  'INTEGRATED EXPLOSIVES':    '💣 Integrated Explosives',
+  'REINFORCED EPAULETTES':    '🛡️ Reinforced Epaulettes',
+  'PEAK PHYSIQUE':            '🏃 Peak Physique',
+  'BALLISTIC PADDING':        '🛡️ Ballistic Padding',
+  'ADRENO-DEFIBRILLATOR':     '💉 Adreno-Defibrillator',
+  'FEET FIRST':               '🪂 Feet First',
+  'DESERT STORMER':           '🏜️ Desert Stormer',
 };
 
 // ── Helpers ──────────────────────────────────────────
@@ -451,6 +485,44 @@ export async function buildArmas(args, logger) {
   } catch (err) {
     log.error(err, 'buildArmas error');
     return '⚠️ Erro ao buscar dados de armas.';
+  }
+}
+
+/**
+ * /armors [bugs|bots|illu] [7-10]
+ */
+export async function buildArmors(args, logger) {
+  const log = logger.child({ module: 'armors' });
+  const { factions, difficulty } = parseFactionArgs(args);
+
+  try {
+    const data = await getArmorStats(difficulty, 'All');
+    const diffLabel = DIFF_NAMES[difficulty] || `Dificuldade ${difficulty}`;
+    const lines = [];
+
+    for (const faction of factions) {
+      const top = getTopItems(data, faction, ARMOR_NAMES, 10);
+      if (top.length === 0) continue;
+
+      lines.push(`${FACTION_EMOJI[faction] || '❓'} *ARMADURAS — ${FACTION_NAME[faction] || faction}*`);
+      lines.push(`Dificuldade: ${diffLabel}\n`);
+
+      for (let i = 0; i < top.length; i++) {
+        const s = top[i];
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+        const newTag = s.isNew ? ' 🆕' : '';
+        lines.push(`${medal} ${s.name} — ${s.loadouts.toFixed(1)}%${newTag}`);
+      }
+      lines.push('');
+    }
+
+    if (lines.length === 0) return '⚠️ Sem dados de armaduras disponíveis.';
+
+    lines.push('_% = uso em loadouts | Dados: helldive.live_');
+    return lines.join('\n');
+  } catch (err) {
+    log.error(err, 'buildArmors error');
+    return '⚠️ Erro ao buscar dados de armaduras.';
   }
 }
 
