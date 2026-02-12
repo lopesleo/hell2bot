@@ -5,7 +5,14 @@
       "Bash(npm install:*)",
       "Bash(curl:*)",
       "Bash(node --input-type=module -e:*)",
-      "Bash(node index.js:*)"
+      "Bash(node index.js:*)",
+      "WebFetch(domain:helldive.live)",
+      "WebSearch",
+      "WebFetch(domain:api.helldivers2.dev)",
+      "WebFetch(domain:utm7j5pjvi.us-east-1.awsapprunner.com)",
+      "Bash(node -c:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)"
     ]
   }
 }

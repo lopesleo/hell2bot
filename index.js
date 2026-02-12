@@ -8,6 +8,7 @@ import express from 'express';
 import * as db from './src/db.js';
 import * as wa from './src/wa.js';
 import * as detector from './src/detector.js';
+import * as strategems from './src/strategems.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -144,6 +145,26 @@ function setupMessageHandler(sock) {
             break;
           }
 
+          case '/meta': {
+            const metaArgs = text.split(/\s+/).slice(1);
+            const metaText = await strategems.buildMeta(metaArgs, logger);
+            await sock.sendMessage(GROUP_JID, { text: metaText });
+            break;
+          }
+
+          case '/tendencia': {
+            const tendText = await strategems.buildTendencia(logger);
+            await sock.sendMessage(GROUP_JID, { text: tendText });
+            break;
+          }
+
+          case '/armas': {
+            const armasArgs = text.split(/\s+/).slice(1);
+            const armasText = await strategems.buildArmas(armasArgs, logger);
+            await sock.sendMessage(GROUP_JID, { text: armasText });
+            break;
+          }
+
           case '/pollnow': {
             await sock.sendMessage(GROUP_JID, { text: '🔄 Executando poll...' });
             await runPoll();
@@ -188,6 +209,18 @@ function scheduleDailySummary() {
   });
 
   logger.info('Daily summaries scheduled: 08:00 and 20:00 BRT');
+
+  // Weekly meta summary — Sunday 20:00 BRT (23:00 UTC)
+  cron.schedule('0 23 * * 0', async () => {
+    logger.info('Weekly stratagem summary (Sunday 20:00 BRT)');
+    try {
+      const summary = await strategems.buildWeeklySummary(logger);
+      await wa.sendToGroup(GROUP_JID, summary);
+    } catch (err) {
+      logger.error(err, 'Weekly stratagem summary failed');
+    }
+  });
+  logger.info('Weekly stratagem summary scheduled: Sunday 20:00 BRT');
 }
 
 // ── Express debug server ────────────────────────────
