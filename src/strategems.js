@@ -286,6 +286,7 @@ function getTopItems(data, faction, nameMap, n = 10) {
   for (const [key, item] of Object.entries(factionData.items)) {
     const val = item.values?.[0];
     if (!val) continue;
+    if (val.loadouts == null || val.loadouts < 0) continue; // skip invalid data
     entries.push({
       key,
       name: nameOf(key, nameMap),
@@ -313,6 +314,8 @@ function getTrends(data, faction, nameMap) {
     const curr = item.values?.[0];
     const prev = item.values?.[1];
     if (!curr || !prev) continue;
+    if (curr.loadouts == null || curr.loadouts < 0) continue;
+    if (prev.loadouts == null || prev.loadouts < 0) continue;
     const diff = (curr.loadouts || 0) - (prev.loadouts || 0);
     if (Math.abs(diff) < 0.3) continue; // noise filter
     diffs.push({
