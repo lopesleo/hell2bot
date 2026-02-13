@@ -139,6 +139,12 @@ export async function poll(logger) {
     const hadOrders = Array.isArray(prevOrders) && prevOrders.length > 0;
     const hasOrders = Array.isArray(orders) && orders.length > 0;
 
+    // Guard: if API returns empty but we had orders, it's likely a transient
+    // API failure — skip the whole order diff to avoid false "ended"/"new" alerts.
+    if (hadOrders && !hasOrders) {
+      log.warn('API returned empty orders while we had active orders — skipping order diff (likely transient API failure)');
+    }
+
     // ── New/changed orders ──
     if (hasOrders && currHash !== prevHash) {
       db.setState('last_known_orders_json', JSON.stringify(orders));
@@ -169,7 +175,8 @@ export async function poll(logger) {
     }
 
     // ── Order ended ──
-    if (hadOrders) {
+    // Skip if API returned empty (transient failure guard)
+    if (hadOrders && hasOrders) {
       for (const prevOrder of prevOrders) {
         const stillExists = (orders || []).find(o => o.id32 === prevOrder.id32);
         if (!stillExists) {
@@ -210,7 +217,10 @@ export async function poll(logger) {
       }
     }
 
-    db.setState('last_orders_json', JSON.stringify(orders));
+    // Only persist orders state if API returned data (avoid saving [] on transient failures)
+    if (hasOrders || !hadOrders) {
+      db.setState('last_orders_json', JSON.stringify(orders));
+    }
 
     // Save progress snapshot for ETA calculations
     if (hasOrders) saveProgressSnapshot(orders);
